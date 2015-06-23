@@ -6,7 +6,6 @@ set retryLimits=3
 set retryAttempts=0
 set isOpen=0
 
-
 :Check
 SETLOCAL enabledelayedexpansion 
 ::First check if excel file is being opened or not
@@ -33,7 +32,7 @@ endlocal
 
 :Monitor
 SETLOCAL enabledelayedexpansion 
-for /F "delims=" %%i in (C:\Users\xili\Documents\log.txt) do set "lastLine=%%i"
+for /F "delims=" %%i in (log.txt) do set "lastLine=%%i"
 for /F "tokens=2 delims= " %%i in ("%lastLine%") do set "lastLogTime=%%i"
 echo %date% %time% : Last Updated Time: %lastLogTime%.
 
@@ -47,15 +46,15 @@ for /F "tokens=1 delims=:/ " %%i in ("%currentTime%") do (
 ::calculate the days
 for /F "tokens=2 delims=/" %%i in ("%lastLine%") do set "lastLogDay=%%i"
 for /f "tokens=3 delims=/ " %%i in ('date /t') do set "currentDay=%%i"
-
+::calculate the difference in days
 set /A days=%currentDay%-%lastLogDay%
 
 IF %days% LSS 0 set /A days=0
+::change the interval to adjust the alert time interval
 set interval=3600 
 
 
 set /A lastLogTime=(1%lastLogTime:~0,2%-100)*3600+(1%lastLogTime:~3,2%-100)*60+(1%lastLogTime:~6,2%-100)
-
 set /A currentTime=(1%currentTime:~0,2%-100)*3600+(1%currentTime:~3,2%-100)*60+(1%currentTime:~6,2%-100)
 ::ECHO %days%
 ::calculating duration (in seconds)
@@ -82,7 +81,7 @@ if %intervalS% LSS 10 set intervalS=0%intervalS%
 echo %date% %time% : It has been %durationH%:%durationM%:%durationS% since last update.
 ECHO %date% %time% : The alert interval time: %intervalH%:%intervalM%:%intervalS%
 
-::
+::Time exceeded limitation
 if %duration% GTR %interval% (
 	ECHO %date% %time% : The excel file may not work normally.	
 	ECHO %date% %time% : Now trying to reopen %fileName%.
@@ -100,7 +99,7 @@ if %duration% GTR %interval% (
 ) else (
 	ECHO %date% %time% : Everything is fine.
 	ECHO %date% %time% : The next check will be in 2 minutes
-	cscript ExcelHelper.vbs delay 120 //nologo
+	cscript ExcelHelper.vbs delay 10 //nologo
 	ExcelWatcher2.bat
 )
 endlocal

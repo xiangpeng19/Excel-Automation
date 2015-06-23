@@ -137,7 +137,7 @@ Public Sub EmailSender (message)
 	objFlds.Item("http://schemas.microsoft.com/cdo/configuration/smtpusessl") = True
 	'uncomment next three lines if you need to use SMTP Authorization
 	objFlds.Item("http://schemas.microsoft.com/cdo/configuration/sendusername") = "lxp1991"
-	objFlds.Item("http://schemas.microsoft.com/cdo/configuration/sendpassword") = "DAxueqq@01$"
+	objFlds.Item("http://schemas.microsoft.com/cdo/configuration/sendpassword") = "xxxxxxxx"
 	objFlds.Item("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = 1 'cdoBasic
 	objFlds.Update
 	objMail.Configuration = objConf

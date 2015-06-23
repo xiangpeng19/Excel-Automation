@@ -6,7 +6,6 @@ set retryAttempts=0
 
 
 :Check
-SETLOCAL enabledelayedexpansion 
 ::First check if excel file is being opened or not by trapping the exit code
 cscript ExcelHelper.vbs IsExcelOpen %fileName% //nologo
 ::File is not opened
@@ -24,7 +23,7 @@ if %ERRORLEVEL% EQU 11 (
 	ECHO %date% %time% : Now monitor the log file.
 	cscript ExcelHelper.vbs delay 1 //nologo
 )
-endlocal
+
 
 :Monitor
 SETLOCAL enabledelayedexpansion 
@@ -46,6 +45,7 @@ for /f "tokens=3 delims=/ " %%i in ('date /t') do set "currentDay=%%i"
 set /A days=%currentDay%-%lastLogDay%
 
 IF %days% LSS 0 set /A days=0
+::The alert time inverval 
 set interval=3600 
 
 
