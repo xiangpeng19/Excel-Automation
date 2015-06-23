@@ -21,7 +21,7 @@ if %isOpen% EQU 0 (
 	set /A retryAttempts=%retryAttempts%+1
 	start /MIN "" %excelProgramPath% %fileName%
 	cscript ExcelHelper.vbs delay 3 //nologo
-	ExcelWather2.bat
+	ExcelWatcher2.bat
 ) 
 ::File is opened
 if %isOpen% EQU 1 (
@@ -101,6 +101,6 @@ if %duration% GTR %interval% (
 	ECHO %date% %time% : Everything is fine.
 	ECHO %date% %time% : The next check will be in 2 minutes
 	cscript ExcelHelper.vbs delay 120 //nologo
-	ExcelWather2.bat
+	ExcelWatcher2.bat
 )
 endlocal
