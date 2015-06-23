@@ -28,7 +28,7 @@ endlocal
 
 :Monitor
 SETLOCAL enabledelayedexpansion 
-for /F "delims=" %%i in (C:\Users\xili\Documents\log.txt) do set "lastLine=%%i"
+for /F "delims=" %%i in (log.txt) do set "lastLine=%%i"
 for /F "tokens=2 delims= " %%i in ("%lastLine%") do set "lastLogTime=%%i"
 echo %date% %time% : Last Updated Time: %lastLogTime%
 
