@@ -4,10 +4,18 @@
 '10: Excel File Not Opened
 '11: Excel File Is Opened
 '12: Number of Arguments doesn't match
+'13: Excel File Not Exists
 
 Public Sub IsExcelOpen(ExcelFileName)
-
 	On Error Resume Next
+	'First check if a file exists
+	Dim fso
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	if not fso.FileExists(ExcelFileName) then
+		fso = Nothing
+		Wscript.Quit 13
+	end if
+
 	Set objExcel = GetObject(, "Excel.Application")  'attach to running Excel instance
 	If Err Then
 	  If Err.Number = 429 Then
@@ -107,10 +115,15 @@ Public Sub CloseExcel(ExcelFileName)
 	End If
 	On Error Goto 0
 
+
 	For Each obj In objExcel.Workbooks
 	  If obj.Name = ExcelFileName Then  'use obj.FullName for full path
-	    obj.Save
-	    obj.Close 
+	  	obj.Save
+	    if objExcel.Workbooks.Count = 1 then 
+			objExcel.Quit
+	    else 
+	    	obj.Close
+	    end if  
 	    If Err Then 
 	    	WScript.Echo Err.Description &  ExcelFileName & " is closed."
 	    End IF
@@ -183,5 +196,6 @@ Public Sub Main()
 
 	WScript.Quit 0
 End Sub
+
 
 Main()

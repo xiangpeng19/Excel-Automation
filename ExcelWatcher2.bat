@@ -8,6 +8,13 @@ set isOpen=0
 
 :Check
 SETLOCAL enabledelayedexpansion 
+
+cscript ExcelHelper.vbs IsExcelOpen %fileName% //nologo
+if %ERRORLEVEL%	 EQU 13 (
+	ECHO %date% %time% : The file %fileName% does not exits. 
+	pause
+	exit
+)
 ::First check if excel file is being opened or not
 start /MIN "" %excelProgramPath% %fileNameHelper%
 cscript ExcelHelper.vbs delay 1 //nologo
