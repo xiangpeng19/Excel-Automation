@@ -115,7 +115,11 @@ End Sub
 
 Public Sub CloseExcel(ExcelFileName)
 	On Error Resume Next
-	Set objExcel = GetObject(, "Excel.Application")
+	'Set objExcel = GetObject(, "Excel.Application")
+	Set objExcel = GetObject(ExcelFileName).Application
+	objExcel.Quit
+	MsgBox ("After Quit")
+	Wscript.Quit 0
 	If Err Then
 	  If Err.Number = 429 Then
 	    WScript.Echo "Workbook not open (Excel is not running)."
@@ -213,5 +217,5 @@ Public Sub Main()
 	WScript.Quit 0
 End Sub
 
-
-Main()
+CloseExcel("LCHCME (version 2).xls")
+'Main()

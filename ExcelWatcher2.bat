@@ -7,7 +7,7 @@ Set frequency=%3
 Set interval=%4
 Set fileNameHelper=ExcelHelper.xls
 Set excelProgramPath="C:\Program Files (x86)\Microsoft Office\Office14\excel.exe"
-set retryLimits=3
+set retryLimits=5
 set retryAttempts=0
 set isOpen=0
 title Monitoring: %fileName%, Log File: %logFile%, Checking Frequency: %frequency% s, Interval: %interval% s
@@ -34,8 +34,8 @@ if %4.==. (
 	goto :eof
 )
 
-:Check
 
+:Check
 ::Check whether excel file exists
 cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
 if %ERRORLEVEL%	EQU 13 (
@@ -51,6 +51,7 @@ if %ERRORLEVEL%	EQU 13 (
 )
 
 cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
+
 ::First check if excel file is being opened or not
 start /MIN "" %excelProgramPath% %fileNameHelper%
 cscript ExcelHelper.vbs delay 1 //nologo
@@ -151,15 +152,17 @@ if %duration% GTR %interval% (
 	ECHO %date% %time% : The excel file may not work normally.	
 	ECHO %date% %time% : Now trying to reopen %fileName%.
 	set /A retryAttempts=%retryAttempts%+1
+
 	if %retryAttempts% LSS %retryLimits% (
 		cscript ExcelHelper.vbs CloseExcel %fileName% //nologo
 		cscript ExcelHelper.vbs delay 3 //nologo
 		start /MIN "" %excelProgramPath% %fileName%
 		cscript ExcelHelper.vbs delay 3 //nologo
-		Call :Check
+		goto Check
 	) else (
 		ECHO %date% %time% : Fatal Error.
 		cscript ExcelHelper.vbs EmailSender "Fatal Error. Retry limit exceeded." //nologo
+		goto :eof
 	)
 ) else (
 	ECHO %date% %time% : Everything is fine.
