@@ -31,6 +31,10 @@ for /F "delims=" %%i in (log.txt) do set "lastLine=%%i"
 for /F "tokens=2 delims= " %%i in ("%lastLine%") do set "lastLogTime=%%i"
 echo %date% %time% : Last Updated Time: %lastLogTime%
 
+for /f "delims=" %%i in ('"forfiles /m %logFile% /c "cmd /c echo @fdate @ftime" "') do set ModifiedDateTime=%%i
+For /f "tokens=2 delims= " %%i in("%ModifiedDateTime%") do set "lastLogTime=%%i"
+For /f "tokens=3 delims= " %%i in("%ModifiedDateTime%") do set "AMPM=%%i"
+
 
 set currentTime=%TIME%
 ::adjust the time format
@@ -39,7 +43,7 @@ for /F "tokens=1 delims=:/ " %%i in ("%currentTime%") do (
 )
 
 ::calculate the days
-for /F "tokens=2 delims=/" %%i in ("%lastLine%") do set "lastLogDay=%%i"
+for /F "tokens=2 delims=/" %%i in ("%ModifiedDateTime%") do set "lastLogDay=%%i"
 for /f "tokens=3 delims=/ " %%i in ('date /t') do set "currentDay=%%i"
 
 set /A days=%currentDay%-%lastLogDay%

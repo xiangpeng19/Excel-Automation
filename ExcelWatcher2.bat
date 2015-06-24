@@ -1,5 +1,5 @@
 @echo off
-title ExcelWatcher
+
 ::Get excel file name and logfile from parameters
 Set fileName=%1
 Set logFile=%2
@@ -10,10 +10,13 @@ Set excelProgramPath="C:\Program Files (x86)\Microsoft Office\Office14\excel.exe
 set retryLimits=3
 set retryAttempts=0
 set isOpen=0
+title Monitoring: %fileName%, Log File: %logFile%, Checking Frequency: %frequency% s, Interval: %interval% s
 
 if %1.==. (
-	ECHO %date% %time% : Parameter1 ^(Excel file name^) missing.
-	goto :eof
+	ECHO %date% %time% : Parameters missing.
+	ECHO %date% %time% : You have to pass parameters to this batch file.
+	pause
+	exit
 )
 
 if %2.==. (
@@ -32,7 +35,7 @@ if %4.==. (
 )
 
 :Check
-SETLOCAL enabledelayedexpansion 
+
 ::Check whether excel file exists
 cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
 if %ERRORLEVEL%	EQU 13 (
@@ -68,14 +71,27 @@ if %isOpen% EQU 1 (
 	ECHO %date% %time% : Now monitor the log file.
 	cscript ExcelHelper.vbs delay 1 //nologo
 )
-endlocal
+
 
 :Monitor
-SETLOCAL enabledelayedexpansion 
+::SETLOCAL enabledelayedexpansion 
 for /F "delims=" %%i in (%logFile%) do set "lastLine=%%i"
 for /F "tokens=2 delims= " %%i in ("%lastLine%") do set "lastLogTime=%%i"
 echo %date% %time% : Last Updated Time: %lastLogTime%.
 
+for /f "delims=" %%i in ('"forfiles /m %logFile% /c "cmd /c echo @fdate @ftime" "') do set ModifiedDateTime=%%i
+For /f "tokens=2 delims= " %%i in ("%ModifiedDateTime%") do set "lastLogTime=%%i"
+For /f "tokens=3 delims= " %%i in ("%ModifiedDateTime%") do set "AMPM=%%i"
+
+::Convert 12 Hour Time to 24 Hour Time
+For /f "tokens=1,2,3 delims=:" %%a in ("%lastLogTime%") do set modifiedHour=%%a& set modifiedMin=%%b& set modifiedSec=%%c
+
+IF "%AMPM%" == "AM" (
+	IF %modifiedHour% LSS 10 set modifiedHour=0%modifiedHour%
+)
+IF "%AMPM%" == "PM" Set /A modifiedHour=%modifiedHour%+12
+
+Set modifiedTime=%modifiedHour%:%modifiedMin%:%modifiedSec%
 
 set currentTime=%TIME%
 ::adjust the time format
@@ -84,22 +100,21 @@ for /F "tokens=1 delims=:/ " %%i in ("%currentTime%") do (
 )
 
 ::calculate the days
-for /F "tokens=2 delims=/" %%i in ("%lastLine%") do set "lastLogDay=%%i"
+for /F "tokens=2 delims=/" %%i in ("%ModifiedDateTime%") do set "lastLogDay=%%i"
 for /f "tokens=3 delims=/ " %%i in ('date /t') do set "currentDay=%%i"
 ::calculate the difference in days
 set /A days=%currentDay%-%lastLogDay%
 
 IF %days% LSS 0 set /A days=0
-::change the interval to adjust the alert time interval
-::set interval=3600 
 
 
-set /A lastLogTime=(1%lastLogTime:~0,2%-100)*3600+(1%lastLogTime:~3,2%-100)*60+(1%lastLogTime:~6,2%-100)
+
+set /A modifiedTime=(1%modifiedTime:~0,2%-100)*3600+(1%modifiedTime:~3,2%-100)*60+(1%modifiedTime:~6,2%-100)
 set /A currentTime=(1%currentTime:~0,2%-100)*3600+(1%currentTime:~3,2%-100)*60+(1%currentTime:~6,2%-100)
 ::ECHO %days%
 ::calculating duration (in seconds)
-set /A duration=%currentTime%-%lastLogTime%+(%days%*24*60*60)
-if %currentTime% LSS %lastLogTime% set /A duration=%lastLogTime%-%currentTime%
+set /A duration=%currentTime%-%modifiedTime%+(%days%*24*60*60)
+if %currentTime% LSS %modifiedTime% set /A duration=%modifiedTime%-%currentTime%
 
 ::now break the seconds down to hours, minutes
 set /A durationH=%duration% / 3600
@@ -152,4 +167,4 @@ if %duration% GTR %interval% (
 	cscript ExcelHelper.vbs delay %frequency% //nologo
 	%0 %fileName% %logFile% %frequency% %interval%
 )
-endlocal
+::endlocal
