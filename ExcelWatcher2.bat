@@ -1,5 +1,9 @@
 @echo off
-Set fileName=LCHCME.xls
+::Get excel file name and logfile from parameters
+Set fileName=%1
+Set logFile=%2
+Set frequency=%3
+Set interval=%4
 Set fileNameHelper=ExcelHelper.xls
 Set excelProgramPath="C:\Program Files (x86)\Microsoft Office\Office14\excel.exe"
 set retryLimits=3
@@ -10,7 +14,7 @@ set isOpen=0
 SETLOCAL enabledelayedexpansion 
 
 cscript ExcelHelper.vbs IsExcelOpen %fileName% //nologo
-if %ERRORLEVEL%	 EQU 13 (
+if %ERRORLEVEL%	EQU 13 (
 	ECHO %date% %time% : The file %fileName% does not exits. 
 	pause
 	exit
@@ -27,7 +31,7 @@ if %isOpen% EQU 0 (
 	set /A retryAttempts=%retryAttempts%+1
 	start /MIN "" %excelProgramPath% %fileName%
 	cscript ExcelHelper.vbs delay 3 //nologo
-	ExcelWatcher2.bat
+	%0 %fileName% %logFile% %frequency% %interval%
 ) 
 ::File is opened
 if %isOpen% EQU 1 (
@@ -39,7 +43,7 @@ endlocal
 
 :Monitor
 SETLOCAL enabledelayedexpansion 
-for /F "delims=" %%i in (log.txt) do set "lastLine=%%i"
+for /F "delims=" %%i in (%logFile%) do set "lastLine=%%i"
 for /F "tokens=2 delims= " %%i in ("%lastLine%") do set "lastLogTime=%%i"
 echo %date% %time% : Last Updated Time: %lastLogTime%.
 
@@ -106,7 +110,7 @@ if %duration% GTR %interval% (
 ) else (
 	ECHO %date% %time% : Everything is fine.
 	ECHO %date% %time% : The next check will be in 2 minutes
-	cscript ExcelHelper.vbs delay 10 //nologo
-	ExcelWatcher2.bat
+	cscript ExcelHelper.vbs delay 120 //nologo
+	%0 %fileName% %logFile% %frequency% %interval%
 )
 endlocal
