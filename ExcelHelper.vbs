@@ -4,7 +4,8 @@
 '10: Excel File Not Opened
 '11: Excel File Is Opened
 '12: Number of Arguments doesn't match
-'13: Excel File Not Exists
+'13: File Not Exists
+'14" File Exists
 
 Public Sub IsExcelOpen(ExcelFileName)
 	On Error Resume Next
@@ -40,6 +41,17 @@ Public Sub IsExcelOpen(ExcelFileName)
 	End If
 End Sub
 
+Public Sub CheckFileExist(FileName)
+	dim fso
+	set fso = CreateObject("Scripting.FileSystemObject")
+	if fso.FileExists(FileName) then
+		'fso = Nothing
+		Wscript.Quit 14
+	else
+		'fso = Nothing
+		Wscript.Quit 13 
+	End If
+end sub
 
 Public Sub CheckExcelOpen(ExcelFileName)
 
@@ -167,7 +179,7 @@ End Sub
 
 Public Sub Main()
 	Dim arg
-	Dim ExcelFileName
+	Dim FileName
 	Dim message
 	Set args = Wscript.Arguments
 
@@ -177,7 +189,7 @@ Public Sub Main()
 
 	if args.Item(0) = "IsExcelOpen" Then
 		ExcelFileName = args.Item(1)
-		IsExcelOpen(ExcelFileName)
+		IsExcelOpen(FileName)
 	End IF
 
 	if args.Item(0) = "delay" Then
@@ -185,7 +197,7 @@ Public Sub Main()
 	End If
 
 	if args.Item(0) = "CloseExcel" Then
-		ExcelFileName = args.Item(1)
+		FileName = args.Item(1)
 		CloseExcel(args.Item(1))
 	End If
 
@@ -194,6 +206,10 @@ Public Sub Main()
 		EmailSender(message)
 	end If
 
+	if args.Item(0) = "CheckFileExist" Then 
+		FileName = args.Item(1)
+		CheckFileExist(FileName)
+	End If
 	WScript.Quit 0
 End Sub
 

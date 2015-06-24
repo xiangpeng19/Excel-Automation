@@ -1,4 +1,5 @@
 @echo off
+title ExcelWatcher
 ::Get excel file name and logfile from parameters
 Set fileName=%1
 Set logFile=%2
@@ -10,15 +11,43 @@ set retryLimits=3
 set retryAttempts=0
 set isOpen=0
 
+if %1.==. (
+	ECHO %date% %time% : Parameter1 ^(Excel file name^) missing.
+	goto :eof
+)
+
+if %2.==. (
+	ECHO %date% %time% : Parameter2 ^(Log file name^) missing.
+	goto :eof
+)
+
+if %3.==. (
+	ECHO %date% %time% : Parameter3 ^(Checking frequency^) missing.
+	goto :eof
+)
+
+if %4.==. (
+	ECHO %date% %time% : Parameter4 ^(Interval^) missing.
+	goto :eof
+)
+
 :Check
 SETLOCAL enabledelayedexpansion 
-
-cscript ExcelHelper.vbs IsExcelOpen %fileName% //nologo
+::Check whether excel file exists
+cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
 if %ERRORLEVEL%	EQU 13 (
 	ECHO %date% %time% : The file %fileName% does not exits. 
-	pause
-	exit
+	goto :eof
 )
+
+::Check whether the log file exists
+cscript ExcelHelper.vbs CheckFileExist %logFile% //nologo
+if %ERRORLEVEL%	EQU 13 (
+	ECHO %date% %time% : The log file %logFile% does not exits. 
+	goto :eof
+)
+
+cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
 ::First check if excel file is being opened or not
 start /MIN "" %excelProgramPath% %fileNameHelper%
 cscript ExcelHelper.vbs delay 1 //nologo
@@ -62,7 +91,7 @@ set /A days=%currentDay%-%lastLogDay%
 
 IF %days% LSS 0 set /A days=0
 ::change the interval to adjust the alert time interval
-set interval=3600 
+::set interval=3600 
 
 
 set /A lastLogTime=(1%lastLogTime:~0,2%-100)*3600+(1%lastLogTime:~3,2%-100)*60+(1%lastLogTime:~6,2%-100)
@@ -81,6 +110,11 @@ set /A intervalH=%interval% / 3600
 set /A intervalM=(%interval% - %intervalH%*3600) / 60
 set /A intervalS=(%interval% - %intervalH%*3600 - %intervalM%*60)
 
+set /A frequencyH=%frequency% / 3600
+set /A frequencyM=(%frequency% - %frequencyH%*3600) / 60
+set /A frequencyS=(%frequency% - %frequencyH%*3600 - %frequencyM%*60)
+
+
 if %durationH% LSS 10 set durationH=0%durationH%
 if %durationM% LSS 10 set durationM=0%durationM%
 if %durationS% LSS 10 set durationS=0%durationS%
@@ -88,6 +122,11 @@ if %durationS% LSS 10 set durationS=0%durationS%
 if %intervalH% LSS 10 set intervalH=0%intervalH%
 if %intervalM% LSS 10 set intervalM=0%intervalM%
 if %intervalS% LSS 10 set intervalS=0%intervalS%
+
+if %frequencyH% LSS 10 set frequencyH=0%frequencyH%
+if %frequencyM% LSS 10 set frequencyM=0%frequencyM%
+if %frequencyS% LSS 10 set frequencyS=0%frequencyS%
+
 
 echo %date% %time% : It has been %durationH%:%durationM%:%durationS% since last update.
 ECHO %date% %time% : The alert interval time: %intervalH%:%intervalM%:%intervalS%
@@ -109,8 +148,8 @@ if %duration% GTR %interval% (
 	)
 ) else (
 	ECHO %date% %time% : Everything is fine.
-	ECHO %date% %time% : The next check will be in 2 minutes
-	cscript ExcelHelper.vbs delay 120 //nologo
+	ECHO %date% %time% : The next check will be in %frequencyH%:%frequencyM%:%frequencyS%.
+	cscript ExcelHelper.vbs delay %frequency% //nologo
 	%0 %fileName% %logFile% %frequency% %interval%
 )
 endlocal
