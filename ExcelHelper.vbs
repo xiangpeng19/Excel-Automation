@@ -115,39 +115,35 @@ End Sub
 
 Public Sub CloseExcel(ExcelFileName)
 	On Error Resume Next
-	'Set objExcel = GetObject(, "Excel.Application")
-	Set objExcel = GetObject(ExcelFileName).Application
-	objExcel.Quit
-	MsgBox ("After Quit")
-	Wscript.Quit 0
-	If Err Then
-	  If Err.Number = 429 Then
-	    WScript.Echo "Workbook not open (Excel is not running)."
-	  Else
-	    WScript.Echo Err.Description & " (0x" & Hex(Err.Number) & ")"
-	    WScript.Quit 1
-	  End If
-	  WScript.Quit 1
-	End If
-	On Error Goto 0
+		Set objExcel = GetObject(, "Excel.Application")
+		If Err Then
+		  If Err.Number = 429 Then
+		    WScript.Echo "Workbook not open (Excel is not running)."
+		  Else
+		    WScript.Echo Err.Description & " (0x" & Hex(Err.Number) & ")"
+		    WScript.Quit 1
+		  End If
+		  WScript.Quit 1
+		End If
+		On Error Goto 0
 
 
-	For Each obj In objExcel.Workbooks
-	  If obj.Name = ExcelFileName Then  'use obj.FullName for full path
-	  	obj.Save
-	    if objExcel.Workbooks.Count = 1 then 
-			objExcel.Quit
-	    else 
-	    	obj.Close
-	    end if  
-	    If Err Then 
-	    	WScript.Echo Err.Description &  ExcelFileName & " is closed."
-	    End IF
-	    Exit For
-	  End If
-	Next
-	Set objExcel = Nothing
-	WScript.Quit 0	
+		For Each obj In objExcel.Workbooks
+		  If obj.Name = ExcelFileName Then  'use obj.FullName for full path
+		  	obj.Save
+		    if objExcel.Workbooks.Count = 1 then 
+				objExcel.Quit
+		    else 
+		    	obj.Close
+		    end if  
+		    If Err Then 
+		    	WScript.Echo Err.Description &  ExcelFileName & " is closed."
+		    End IF
+		    Exit For
+		  End If
+		Next
+		Set objExcel = Nothing
+		WScript.Quit 0	
 End Sub
 
 
@@ -217,5 +213,5 @@ Public Sub Main()
 	WScript.Quit 0
 End Sub
 
-CloseExcel("LCHCME (version 2).xls")
-'Main()
+'CloseExcel("LCHCME (version 2).xls")
+Main()

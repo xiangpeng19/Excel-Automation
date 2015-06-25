@@ -5,9 +5,9 @@ Set fileName=%1
 Set logFile=%2
 Set frequency=%3
 Set interval=%4
-Set fileNameHelper=ExcelHelper.xls
+Set fileNameHelper=ExcelHelper-test.xls
 Set excelProgramPath="C:\Program Files (x86)\Microsoft Office\Office14\excel.exe"
-set retryLimits=5
+set retryLimits=2
 set retryAttempts=0
 set isOpen=0
 title Monitoring: %fileName%, Log File: %logFile%, Checking Frequency: %frequency% s, Interval: %interval% s
@@ -15,6 +15,8 @@ title Monitoring: %fileName%, Log File: %logFile%, Checking Frequency: %frequenc
 if %1.==. (
 	ECHO %date% %time% : Parameters missing.
 	ECHO %date% %time% : You have to pass parameters to this batch file.
+	ECHO %date% %time% : The expected format is:
+	ECHO %date% %time% : ExcelWatcher.bat @targetFileName @logFileName @CheckingFrequency @Interal.
 	pause
 	exit
 )
@@ -53,7 +55,7 @@ if %ERRORLEVEL%	EQU 13 (
 cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
 
 ::First check if excel file is being opened or not
-start /MIN "" %excelProgramPath% %fileNameHelper%
+start /MIN "" %excelProgramPath% %fileNameHelper% /%fileName%/CheckOpen
 cscript ExcelHelper.vbs delay 1 //nologo
 for /F "delims=" %%i in (temp.txt) do set "isOpen=%%i"
 
@@ -90,7 +92,9 @@ For /f "tokens=1,2,3 delims=:" %%a in ("%lastLogTime%") do set modifiedHour=%%a&
 IF "%AMPM%" == "AM" (
 	IF %modifiedHour% LSS 10 set modifiedHour=0%modifiedHour%
 )
-IF "%AMPM%" == "PM" Set /A modifiedHour=%modifiedHour%+12
+IF "%AMPM%" == "PM" (
+	if %modifiedHour% NEQ 12  Set /A modifiedHour=%modifiedHour%+12
+)
 
 Set modifiedTime=%modifiedHour%:%modifiedMin%:%modifiedSec%
 
@@ -112,6 +116,7 @@ IF %days% LSS 0 set /A days=0
 
 set /A modifiedTime=(1%modifiedTime:~0,2%-100)*3600+(1%modifiedTime:~3,2%-100)*60+(1%modifiedTime:~6,2%-100)
 set /A currentTime=(1%currentTime:~0,2%-100)*3600+(1%currentTime:~3,2%-100)*60+(1%currentTime:~6,2%-100)
+
 ::ECHO %days%
 ::calculating duration (in seconds)
 set /A duration=%currentTime%-%modifiedTime%+(%days%*24*60*60)
@@ -154,7 +159,7 @@ if %duration% GTR %interval% (
 	set /A retryAttempts=%retryAttempts%+1
 
 	if %retryAttempts% LSS %retryLimits% (
-		cscript ExcelHelper.vbs CloseExcel %fileName% //nologo
+		start /MIN "" %excelProgramPath% %fileNameHelper% /%fileName%/CloseFile
 		cscript ExcelHelper.vbs delay 3 //nologo
 		start /MIN "" %excelProgramPath% %fileName%
 		cscript ExcelHelper.vbs delay 3 //nologo
