@@ -5,20 +5,22 @@ Set fileName=%1
 Set logFile=%2
 Set frequency=%3
 Set interval=%4
-Set fileNameHelper=ExcelHelper-test.xls
+Set updateFrequency=%5
+
+Set fileNameHelper=ExcelHelper.xls
 Set excelProgramPath="C:\Program Files (x86)\Microsoft Office\Office14\excel.exe"
 set retryLimits=2
 set retryAttempts=0
 set isOpen=0
-title Monitoring: %fileName%, Log File: %logFile%, Checking Frequency: %frequency% s, Interval: %interval% s
+title Monitoring: %fileName%, Log File: %logFile%, Checking Frequency: %frequency% s, Interval: %interval% s, updateFrequency: %updateFrequency% s
 
 if %1.==. (
 	ECHO %date% %time% : Parameters missing.
 	ECHO %date% %time% : You have to pass parameters to this batch file.
 	ECHO %date% %time% : The expected format is:
-	ECHO %date% %time% : ExcelWatcher.bat @targetFileName @logFileName @CheckingFrequency @Interal.
+	ECHO %date% %time% : ExcelWatcher.bat @targetFileName @logFileName @CheckingFrequency^(in sec^) @Interal^(in sec^).
 	pause
-	exit
+	goto :eof
 )
 
 if %2.==. (
@@ -36,6 +38,21 @@ if %4.==. (
 	goto :eof
 )
 
+if %5.==. (
+	ECHO %date% %time% : Parameter5 ^(Update Frequency^) missing.
+	goto :eof
+)
+
+
+set /A updateFrequencyH=%updateFrequency% / 3600
+set /A updateFrequencyM=(%updateFrequency% - %updateFrequencyH%*3600) / 60
+set /A updateFrequencyS=(%updateFrequency% - %updateFrequencyH%*3600 - %updateFrequencyM%*60)
+
+if %updateFrequencyH% LSS 10 set updateFrequencyH=0%updateFrequencyH%
+if %updateFrequencyM% LSS 10 set updateFrequencyM=0%updateFrequencyM%
+if %updateFrequencyS% LSS 10 set updateFrequencyS=0%updateFrequencyS%
+
+set updateFrequencyTime=%updateFrequencyH%:%updateFrequencyM%:%updateFrequencyS%
 
 :Check
 ::Check whether excel file exists
@@ -64,9 +81,9 @@ if %isOpen% EQU 0 (
 	ECHO %date% %time% : %fileName% is not opened.
 	ECHO %date% %time% : Now trying to open %fileName%.
 	set /A retryAttempts=%retryAttempts%+1
-	start /MIN "" %excelProgramPath% %fileName%
+	start /MIN "" %excelProgramPath% %fileName% /%updateFrequencyTime%
 	cscript ExcelHelper.vbs delay 3 //nologo
-	%0 %fileName% %logFile% %frequency% %interval%
+	%0 %fileName% %logFile% %frequency% %interval% %updateFrequency%
 ) 
 ::File is opened
 if %isOpen% EQU 1 (
@@ -148,7 +165,7 @@ if %frequencyH% LSS 10 set frequencyH=0%frequencyH%
 if %frequencyM% LSS 10 set frequencyM=0%frequencyM%
 if %frequencyS% LSS 10 set frequencyS=0%frequencyS%
 
-
+ECHo %date% %time% : The database update frequency: %updateFrequencyH%:%updateFrequencyM%:%updateFrequencyS%
 echo %date% %time% : It has been %durationH%:%durationM%:%durationS% since last update.
 ECHO %date% %time% : The alert interval time: %intervalH%:%intervalM%:%intervalS%
 
@@ -161,7 +178,7 @@ if %duration% GTR %interval% (
 	if %retryAttempts% LSS %retryLimits% (
 		start /MIN "" %excelProgramPath% %fileNameHelper% /%fileName%/CloseFile
 		cscript ExcelHelper.vbs delay 3 //nologo
-		start /MIN "" %excelProgramPath% %fileName%
+		start /MIN "" %excelProgramPath% %fileName% /%updateFrequencyTime
 		cscript ExcelHelper.vbs delay 3 //nologo
 		goto Check
 	) else (
@@ -173,6 +190,6 @@ if %duration% GTR %interval% (
 	ECHO %date% %time% : Everything is fine.
 	ECHO %date% %time% : The next check will be in %frequencyH%:%frequencyM%:%frequencyS%.
 	cscript ExcelHelper.vbs delay %frequency% //nologo
-	%0 %fileName% %logFile% %frequency% %interval%
+	%0 %fileName% %logFile% %frequency% %interval% %updateFrequency%
 )
 ::endlocal

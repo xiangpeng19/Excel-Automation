@@ -213,5 +213,5 @@ Public Sub Main()
 	WScript.Quit 0
 End Sub
 
-'CloseExcel("LCHCME (version 2).xls")
+
 Main()
