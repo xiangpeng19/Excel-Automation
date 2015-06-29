@@ -8,7 +8,7 @@ Set interval=%4
 Set updateFrequency=%5
 
 Set fileNameHelper=ExcelHelper.xls
-Set excelProgramPath="C:\Program Files (x86)\Microsoft Office\Office14\excel.exe"
+Set excelProgramPath="C:\Program Files\Microsoft Office\Office11\excel.exe"
 set retryLimits=2
 set retryAttempts=0
 set isOpen=0
@@ -18,7 +18,7 @@ if %1.==. (
 	ECHO %date% %time% : Parameters missing.
 	ECHO %date% %time% : You have to pass parameters to this batch file.
 	ECHO %date% %time% : The expected format is:
-	ECHO %date% %time% : ExcelWatcher.bat @targetFileName @logFileName @CheckingFrequency^(in sec^) @Interal^(in sec^).
+	ECHO %date% %time% : ExcelWatcher.bat @targetFileName @logFileName @CheckingFrequency^(in sec^) @Interval^(in sec^) @UpdateFrequency^(in sec^).
 	pause
 	goto :eof
 )
@@ -73,7 +73,7 @@ cscript ExcelHelper.vbs CheckFileExist %fileName% //nologo
 
 ::First check if excel file is being opened or not
 start /MIN "" %excelProgramPath% %fileNameHelper% /%fileName%/CheckOpen
-cscript ExcelHelper.vbs delay 1 //nologo
+cscript ExcelHelper.vbs delay 5 //nologo
 for /F "delims=" %%i in (temp.txt) do set "isOpen=%%i"
 
 ::File is not opened
@@ -82,14 +82,14 @@ if %isOpen% EQU 0 (
 	ECHO %date% %time% : Now trying to open %fileName%.
 	set /A retryAttempts=%retryAttempts%+1
 	start /MIN "" %excelProgramPath% %fileName% /%updateFrequencyTime%
-	cscript ExcelHelper.vbs delay 3 //nologo
+	cscript ExcelHelper.vbs delay 5 //nologo
 	%0 %fileName% %logFile% %frequency% %interval% %updateFrequency%
 ) 
 ::File is opened
 if %isOpen% EQU 1 (
 	ECHO %date% %time% : %fileName% has already been opened.
 	ECHO %date% %time% : Now monitor the log file.
-	cscript ExcelHelper.vbs delay 1 //nologo
+	cscript ExcelHelper.vbs delay 5 //nologo
 )
 
 
@@ -174,16 +174,16 @@ if %duration% GTR %interval% (
 	ECHO %date% %time% : The excel file may not work normally.	
 	ECHO %date% %time% : Now trying to reopen %fileName%.
 	set /A retryAttempts=%retryAttempts%+1
-
+	cscript ExcelHelper.vbs delay 5 //nologo
 	if %retryAttempts% LSS %retryLimits% (
 		start /MIN "" %excelProgramPath% %fileNameHelper% /%fileName%/CloseFile
-		cscript ExcelHelper.vbs delay 3 //nologo
+		cscript ExcelHelper.vbs delay 5 //nologo
 		start /MIN "" %excelProgramPath% %fileName% /%updateFrequencyTime
-		cscript ExcelHelper.vbs delay 3 //nologo
+		cscript ExcelHelper.vbs delay 5 //nologo
 		goto Check
 	) else (
-		ECHO %date% %time% : Fatal Error.
-		cscript ExcelHelper.vbs EmailSender "Fatal Error. Retry limit exceeded." //nologo
+		ECHO %date% %time% : Fatal Error. Retry limit exceeded.
+		::cscript ExcelHelper.vbs EmailSender "Fatal Error. Retry limit exceeded." //nologo
 		goto :eof
 	)
 ) else (
